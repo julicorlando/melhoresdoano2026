@@ -31,6 +31,9 @@ export default function Admin() {
   const [resetText, setResetText] = useState("");
   const [resetMsg, setResetMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [newCat, setNewCat] = useState({ emoji: "", title: "", desc: "" });
+  const [catMsg, setCatMsg] = useState("");
+  const [removing, setRemoving] = useState(null);
 
   async function load(pw = password) {
     setLoading(true);
@@ -104,6 +107,37 @@ export default function Admin() {
       await load();
     } catch (err) {
       setResetMsg(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addCategory(e) {
+    e.preventDefault();
+    setBusy(true);
+    setCatMsg("");
+    try {
+      await adminAction({ action: "addCategory", ...newCat });
+      setNewCat({ emoji: "", title: "", desc: "" });
+      setCatMsg("Categoria adicionada. Ela já aparece para quem for votar.");
+      await load();
+    } catch (err) {
+      setCatMsg(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeCategory(id) {
+    setBusy(true);
+    setCatMsg("");
+    try {
+      await adminAction({ action: "removeCategory", id });
+      setRemoving(null);
+      setCatMsg("Categoria removida.");
+      await load();
+    } catch (err) {
+      setCatMsg(err.message);
     } finally {
       setBusy(false);
     }
@@ -225,6 +259,48 @@ export default function Admin() {
             )}
             {resetMsg && <p className="panel-msg">{resetMsg}</p>}
           </div>
+        </section>
+
+        <section className="panel cats">
+          <div className="panel-head">
+            <h3 className="panel-title">Categorias ({data.categories.length})</h3>
+          </div>
+          <form className="cat-form" onSubmit={addCategory}>
+            <label className="field cat-emoji">
+              <span className="label">Emoji</span>
+              <input className="input input-sm" value={newCat.emoji} placeholder="⭐" maxLength={8}
+                onChange={(e) => setNewCat((c) => ({ ...c, emoji: e.target.value }))} />
+            </label>
+            <label className="field">
+              <span className="label">Nome da categoria</span>
+              <input className="input input-sm" value={newCat.title} placeholder="Ex.: O Mestre do Café" maxLength={60} required
+                onChange={(e) => setNewCat((c) => ({ ...c, title: e.target.value }))} />
+            </label>
+            <label className="field">
+              <span className="label">Descrição</span>
+              <input className="input input-sm" value={newCat.desc} placeholder="Ex.: Nunca deixa a garrafa vazia." maxLength={140}
+                onChange={(e) => setNewCat((c) => ({ ...c, desc: e.target.value }))} />
+            </label>
+            <button className="btn btn-primary btn-sm" disabled={busy || newCat.title.trim().length < 2}>Adicionar</button>
+          </form>
+          {catMsg && <p className="panel-msg">{catMsg}</p>}
+          <ol className="cat-list">
+            {data.categories.map((c, i) => (
+              <li key={c.id}>
+                <span className="cat-n">{String(i + 1).padStart(2, "0")}</span>
+                <span className="cat-t">{c.emoji} {c.title}<small>{c.desc}</small></span>
+                {removing === c.id ? (
+                  <span className="cat-actions">
+                    <span className="cat-warn">{c.total > 0 ? `Apaga ${c.total} voto(s).` : "Remover?"}</span>
+                    <button className="btn btn-danger btn-xs" disabled={busy} onClick={() => removeCategory(c.id)}>Remover</button>
+                    <button className="btn btn-link" onClick={() => setRemoving(null)}>Cancelar</button>
+                  </span>
+                ) : (
+                  <button className="btn btn-link cat-rm" onClick={() => setRemoving(c.id)} aria-label={`Remover ${c.title}`}>Remover</button>
+                )}
+              </li>
+            ))}
+          </ol>
         </section>
 
         <div className="results">

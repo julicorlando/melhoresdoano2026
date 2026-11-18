@@ -1,8 +1,7 @@
 import { pipeline, hashToObject, readBody } from "./_redis.js";
-import { CATEGORIES } from "../shared/categories.js";
 import { votingState } from "../shared/schedule.js";
 import { checkPassword } from "./_auth.js";
-import { getConfig } from "./_config.js";
+import { getConfig, getCategories } from "./_config.js";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -11,6 +10,7 @@ export default async function handler(req, res) {
   if (!checkPassword(password)) return res.status(401).json({ error: "Senha incorreta." });
 
   try {
+    const CATEGORIES = await getCategories();
     const cmds = [["SCARD", "voters:all"]];
     for (const c of CATEGORIES) {
       cmds.push(["HGETALL", `votes:${c.id}`], ["HGETALL", `names:${c.id}`], ["SCARD", `voters:${c.id}`]);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CATEGORIES } from "../shared/categories.js";
+import { CATEGORIES as DEFAULT_CATEGORIES } from "../shared/categories.js";
 import { formatLocal } from "../shared/schedule.js";
 import { Logos, BrandLines } from "./Brand.jsx";
 
@@ -56,6 +56,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [anim, setAnim] = useState("in");
   const [voting, setVoting] = useState(null);
+  const [CATEGORIES, setCategories] = useState(DEFAULT_CATEGORIES);
   const inputRef = useRef(null);
 
   // Sincroniza com o servidor (garante 1 voto por categoria mesmo trocando de aba)
@@ -64,6 +65,7 @@ export default function App() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d?.voting) setVoting(d.voting);
+        if (Array.isArray(d?.categories) && d.categories.length) setCategories(d.categories);
         if (d?.voted) {
           let local = readLocalVoted();
           // Votação foi zerada pelo admin: descarta o progresso salvo no navegador
@@ -85,10 +87,11 @@ export default function App() {
   }, [voterId]);
 
   const pending = CATEGORIES.filter((c) => !voted.includes(c.id));
+  const votedCount = CATEGORIES.length - pending.length;
   const current = pending[0];
   const index = current ? CATEGORIES.indexOf(current) : CATEGORIES.length;
   const done = !current;
-  const progress = Math.round(((CATEGORIES.length - pending.length) / CATEGORIES.length) * 100);
+  const progress = Math.round((votedCount / CATEGORIES.length) * 100);
 
   useEffect(() => {
     if (started && current) setTimeout(() => inputRef.current?.focus(), 350);
@@ -189,7 +192,9 @@ export default function App() {
           </section>
         )}
 
-        {started && !done && voting && voting.state !== "open" && (
+        {started && loading && <p className="hint">Carregando…</p>}
+
+        {started && !loading && !done && voting && voting.state !== "open" && (
           <section className="intro fade-in">
             <div className="notice">
               <strong>{voting.state === "before" ? "A votação ainda não começou." : "A votação está encerrada."}</strong>
@@ -198,7 +203,7 @@ export default function App() {
           </section>
         )}
 
-        {started && !done && (!voting || voting.state === "open") && (
+        {started && !loading && !done && (!voting || voting.state === "open") && (
           <section className={`vote ${anim === "in" ? "slide-in" : "slide-out"}`} key={current.id}>
             <div className="progress" aria-label={`Progresso: ${progress}%`}>
               <div className="progress-bar" style={{ width: `${progress}%` }} />
@@ -229,14 +234,14 @@ export default function App() {
                 />
                 {error && <p className="error" role="alert">{error}</p>}
                 <button className="btn btn-primary btn-block" disabled={sending}>
-                  {sending ? "Enviando…" : index + 1 === CATEGORIES.length ? "Votar e finalizar" : "Votar"}
+                  {sending ? "Enviando…" : pending.length === 1 ? "Votar e finalizar" : "Votar"}
                 </button>
               </form>
             </div>
           </section>
         )}
 
-        {started && done && (
+        {started && !loading && done && (
           <section className="thanks fade-in">
             <div className="check" aria-hidden="true">
               <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" /><path d="M15 27 l7 7 l15 -16" /></svg>

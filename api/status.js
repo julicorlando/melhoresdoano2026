@@ -1,13 +1,13 @@
 import { pipeline, hashToObject, VOTER_RE } from "./_redis.js";
 import { votingState } from "../shared/schedule.js";
-import { getConfig } from "./_config.js";
+import { getConfig, getCategories } from "./_config.js";
 
 // Estado público da votação + categorias em que este visitante já votou
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   const voterId = String(req.query?.voter || "");
   try {
-    const cfg = await getConfig();
+    const [cfg, categories] = await Promise.all([getConfig(), getCategories()]);
     let voted = [];
     if (VOTER_RE.test(voterId)) {
       const [h] = await pipeline([["HGETALL", `voter:${voterId}`]]);
@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       voted,
       epoch: cfg.epoch,
+      categories,
       voting: { state: votingState(cfg), mode: cfg.mode, start: cfg.start, end: cfg.end },
     });
   } catch (e) {

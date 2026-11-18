@@ -32,4 +32,5 @@ npx vercel dev   # sobe front + /api (precisa das variáveis do Redis em .env.lo
 
 ## Editar categorias
 
-`shared/categories.js` — usado tanto pela página quanto pela API.
+Pelo painel `/admin` (quadro **Categorias**): adicionar ou remover. A lista fica salva no banco;
+`shared/categories.js` guarda só a lista inicial, usada enquanto ninguém mexeu nas categorias.
