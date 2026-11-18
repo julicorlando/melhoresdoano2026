@@ -1,20 +1,14 @@
-import crypto from "node:crypto";
 import { pipeline, hashToObject, readBody } from "./_redis.js";
 import { CATEGORIES } from "../shared/categories.js";
-
-const PASSWORD = process.env.ADMIN_PASSWORD || "070525admin";
-
-function safeEqual(a, b) {
-  const ha = crypto.createHash("sha256").update(String(a)).digest();
-  const hb = crypto.createHash("sha256").update(String(b)).digest();
-  return crypto.timingSafeEqual(ha, hb);
-}
+import { votingState } from "../shared/schedule.js";
+import { checkPassword } from "./_auth.js";
+import { getConfig } from "./_config.js";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
   const { password } = readBody(req);
-  if (!password || !safeEqual(password, PASSWORD)) return res.status(401).json({ error: "Senha incorreta." });
+  if (!checkPassword(password)) return res.status(401).json({ error: "Senha incorreta." });
 
   try {
     const cmds = [["SCARD", "voters:all"]];
@@ -31,7 +25,9 @@ export default async function handler(req, res) {
         .sort((a, b) => b.votes - a.votes || a.name.localeCompare(b.name, "pt-BR"));
       return { ...c, total: Number(out[3 + i * 3]) || 0, ranking };
     });
-    return res.status(200).json({ totalVoters, categories, updatedAt: new Date().toISOString() });
+    const cfg = await getConfig();
+    const voting = { state: votingState(cfg), mode: cfg.mode, start: cfg.start, end: cfg.end };
+    return res.status(200).json({ totalVoters, categories, voting, updatedAt: new Date().toISOString() });
   } catch (e) {
     console.error(e);
     return res.status(e.status || 500).json({ error: e.status ? e.message : "Erro ao carregar resultados." });

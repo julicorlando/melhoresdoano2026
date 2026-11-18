@@ -1,9 +1,10 @@
 # Melhores do Ano 2026 · Petribu · Shopping Carpina
 
-Votação online das 11 categorias do **Melhores do Ano 2026** (votação de 23 a 30/11, save the date 10/12/2026).
+Votação online das 11 categorias do **Melhores do Ano 2026** (votação de 23 a 30/11, save the date 11/12/2026).
 
 - `/` — página de votação: uma categoria por vez; a próxima só aparece depois do voto. Ao final, agradecimento + *save the date*.
-- `/admin` — resultados em tempo real (protegido por senha), com ranking por categoria e exportação CSV.
+- `/admin` — resultados em tempo real (protegido por senha), ranking por categoria, exportação CSV,
+  agendamento da votação (abre/fecha automaticamente, ou abrir/fechar na hora) e botão para zerar todos os votos.
 
 Cada visitante vota **uma vez por categoria** (identificação anônima salva no navegador e validada no servidor).
 Os nomes digitados são agrupados ignorando maiúsculas, acentos e espaços extras ("joão silva" = "João Silva").
@@ -20,8 +21,7 @@ Visual segundo o Manual de Identidade Visual Petribu (Azul Prússia `#102D40`, V
    Isso cria automaticamente `KV_REST_API_URL` e `KV_REST_API_TOKEN`.
 3. (Recomendado) Em **Settings → Environment Variables**, defina `ADMIN_PASSWORD`.
    Sem ela, vale a senha padrão combinada.
-4. (Opcional) `ENFORCE_VOTING_DATES=true` bloqueia votos fora de 23/11 a 30/11/2026 (horário de Brasília).
-5. Faça **Redeploy** para as variáveis valerem.
+4. Faça **Redeploy** para as variáveis valerem.
 
 ## Rodar localmente
 

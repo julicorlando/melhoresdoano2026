@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 import { Logos, BrandLines } from "./Brand.jsx";
+import { formatLocal } from "../shared/schedule.js";
+
+const STATE_LABEL = {
+  open: "Votação aberta",
+  before: "Agendada — ainda não abriu",
+  after: "Encerrada (prazo terminou)",
+  closed: "Fechada manualmente",
+};
 
 const SS_KEY = "mda2026_admin";
 
@@ -17,6 +25,12 @@ export default function Admin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState({});
+  const [sched, setSched] = useState(null);
+  const [schedMsg, setSchedMsg] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetText, setResetText] = useState("");
+  const [resetMsg, setResetMsg] = useState("");
+  const [busy, setBusy] = useState(false);
 
   async function load(pw = password) {
     setLoading(true);
@@ -35,6 +49,7 @@ export default function Admin() {
       }
       sessionStorage.setItem(SS_KEY, pw);
       setData(d);
+      setSched((prev) => prev || { mode: d.voting.mode, start: d.voting.start, end: d.voting.end });
     } catch {
       setError("Sem conexão.");
     } finally {
@@ -50,6 +65,48 @@ export default function Admin() {
     a.href = URL.createObjectURL(blob);
     a.download = "melhores-do-ano-2026-resultados.csv";
     a.click();
+  }
+
+  async function adminAction(body) {
+    const r = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password, ...body }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || "Erro ao executar ação.");
+    return d;
+  }
+
+  async function saveSchedule(e) {
+    e.preventDefault();
+    setBusy(true);
+    setSchedMsg("");
+    try {
+      const d = await adminAction({ action: "schedule", ...sched });
+      setData((prev) => ({ ...prev, voting: d.voting }));
+      setSchedMsg("Agendamento salvo.");
+    } catch (err) {
+      setSchedMsg(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function doReset() {
+    setBusy(true);
+    setResetMsg("");
+    try {
+      await adminAction({ action: "reset", confirm: resetText });
+      setResetOpen(false);
+      setResetText("");
+      setResetMsg("Votação zerada. Todos podem votar novamente.");
+      await load();
+    } catch (err) {
+      setResetMsg(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   function logout() {
@@ -108,6 +165,67 @@ export default function Admin() {
           <div className="stat"><span className="stat-n">{totalVotes}</span><span className="stat-l">votos registrados</span></div>
           <div className="stat"><span className="stat-n">{data.categories.length}</span><span className="stat-l">categorias</span></div>
         </div>
+
+        <section className="controls">
+          <form className="panel" onSubmit={saveSchedule}>
+            <div className="panel-head">
+              <h3 className="panel-title">Agendamento da votação</h3>
+              <span className={`badge badge-${data.voting.state}`}>{STATE_LABEL[data.voting.state]}</span>
+            </div>
+            <div className="seg" role="radiogroup" aria-label="Modo da votação">
+              {[["auto", "Automático (agenda)"], ["open", "Aberta agora"], ["closed", "Fechada agora"]].map(([v, l]) => (
+                <button type="button" key={v} role="radio" aria-checked={sched?.mode === v}
+                  className={`seg-btn ${sched?.mode === v ? "is-on" : ""}`}
+                  onClick={() => setSched((p) => ({ ...p, mode: v }))}>{l}</button>
+              ))}
+            </div>
+            <div className={`dates ${sched?.mode !== "auto" ? "is-dim" : ""}`}>
+              <label className="field">
+                <span className="label">Libera em</span>
+                <input type="datetime-local" className="input input-sm" value={sched?.start || ""}
+                  onChange={(e) => setSched((p) => ({ ...p, start: e.target.value }))} required />
+              </label>
+              <label className="field">
+                <span className="label">Bloqueia em</span>
+                <input type="datetime-local" className="input input-sm" value={sched?.end || ""}
+                  onChange={(e) => setSched((p) => ({ ...p, end: e.target.value }))} required />
+              </label>
+            </div>
+            <p className="panel-note">
+              Horário de Brasília. Em “Automático”, a votação abre em {formatLocal(data.voting.start)} e fecha em {formatLocal(data.voting.end)}.
+            </p>
+            <div className="panel-foot">
+              <button className="btn btn-primary btn-sm" disabled={busy}>Salvar agendamento</button>
+              {schedMsg && <span className="panel-msg">{schedMsg}</span>}
+            </div>
+          </form>
+
+          <div className="panel panel-danger">
+            <h3 className="panel-title">Zerar votação</h3>
+            <p className="panel-note">
+              Apaga todos os votos e libera todo mundo para votar de novo. Não dá para desfazer —
+              exporte o CSV antes se quiser guardar os resultados.
+            </p>
+            {!resetOpen ? (
+              <button className="btn btn-danger btn-sm" onClick={() => { setResetOpen(true); setResetMsg(""); }}>
+                Limpar votos e resetar
+              </button>
+            ) : (
+              <div className="reset-confirm">
+                <label className="label" htmlFor="zerar">Digite ZERAR para confirmar</label>
+                <input id="zerar" className="input input-sm" value={resetText} autoComplete="off"
+                  onChange={(e) => setResetText(e.target.value.toUpperCase())} />
+                <div className="panel-foot">
+                  <button className="btn btn-danger btn-sm" disabled={busy || resetText !== "ZERAR"} onClick={doReset}>
+                    {busy ? "Zerando…" : "Confirmar e zerar"}
+                  </button>
+                  <button className="btn btn-link" onClick={() => { setResetOpen(false); setResetText(""); }}>Cancelar</button>
+                </div>
+              </div>
+            )}
+            {resetMsg && <p className="panel-msg">{resetMsg}</p>}
+          </div>
+        </section>
 
         <div className="results">
           {data.categories.map((c, i) => {
