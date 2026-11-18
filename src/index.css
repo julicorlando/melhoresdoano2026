@@ -96,7 +96,7 @@ button { font-family: inherit; }
   line-height: 1;
   padding: 10px 18px 10px calc(18px + 0.5em);
 }
-.lead { font-family: var(--lora); font-size: 18px; line-height: 1.55; color: var(--muted); margin: 0 auto 26px; max-width: 470px; }
+.lead { text-shadow: 0 0 12px var(--navy-900), 0 0 4px var(--navy-900); font-family: var(--lora); font-size: 18px; line-height: 1.55; color: var(--muted); margin: 0 auto 26px; max-width: 470px; }
 .lead strong { color: var(--white); font-weight: 500; }
 
 .period {
@@ -107,13 +107,13 @@ button { font-family: inherit; }
   border-radius: 999px;
   padding: 10px 20px;
   margin-bottom: 30px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--navy-900);
 }
 .period-label { font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); }
 .period-dates { font-weight: 600; font-size: 18px; color: var(--lime); }
-.notice { display: flex; flex-direction: column; gap: 6px; border: 1px solid rgba(207, 214, 4, 0.45); background: rgba(207, 214, 4, 0.08); border-radius: 20px; padding: 18px 22px; font-size: 15px; color: var(--muted); }
+.notice { display: flex; flex-direction: column; gap: 6px; border: 1px solid rgba(207, 214, 4, 0.45); background: linear-gradient(rgba(207, 214, 4, 0.08), rgba(207, 214, 4, 0.08)), var(--navy-900); border-radius: 20px; padding: 18px 22px; font-size: 15px; color: var(--muted); }
 .notice strong { color: var(--lime); font-weight: 600; font-size: 17px; }
-.hint { font-size: 13px; color: var(--muted); margin-top: 16px; }
+.hint { text-shadow: 0 0 8px var(--navy-900), 0 0 3px var(--navy-900); font-size: 13px; color: var(--muted); margin-top: 16px; }
 
 /* ---------- Estrela que revela o título ---------- */
 .title-wrap { position: relative; }
@@ -179,7 +179,7 @@ button { font-family: inherit; }
 .card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(160deg, rgba(35, 98, 140, 0.35), rgba(16, 45, 64, 0.85));
+  background: linear-gradient(160deg, #163e5a, #102d40);
   border: 1px solid var(--line);
   border-radius: 28px;
   padding: 36px 30px 30px;
@@ -272,7 +272,7 @@ button { font-family: inherit; }
 .admin-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 26px; }
-.stat { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; }
+.stat { background: #12313f; border: 1px solid var(--line); border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; }
 .stat-n { font-weight: 800; font-size: 34px; color: var(--lime); line-height: 1.1; }
 .stat-l { font-size: 13px; color: var(--muted); }
 
