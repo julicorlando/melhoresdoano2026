@@ -140,13 +140,26 @@ export default function App() {
 
       <main className="stage">
         {!started && (
-          <section className="intro fade-in">
+          <section className="intro intro-reveal">
             <p className="eyebrow">Premiação interna</p>
-            <h1 className="title">
+            <div className="title-wrap">
+              <svg className="star" viewBox="0 0 100 100" aria-hidden="true">
+                <defs>
+                  <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#CFD604" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#CFD604" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+                <circle cx="50" cy="50" r="50" fill="url(#starGlow)" />
+                <path d="M50 6 C53 34 66 47 94 50 C66 53 53 66 50 94 C47 66 34 53 6 50 C34 47 47 34 50 6 Z" fill="#CFD604" />
+                <path d="M50 30 C51 44 56 49 70 50 C56 51 51 56 50 70 C49 56 44 51 30 50 C44 49 49 44 50 30 Z" fill="#ffffff" opacity="0.85" />
+              </svg>
+              <h1 className="title">
               <span className="title-light">Melhores</span>
               <span className="title-strong">do Ano</span>
               <span className="title-year">2026</span>
-            </h1>
+              </h1>
+            </div>
             <p className="lead">
               Chegou a hora de reconhecer quem fez o nosso ano mais divertido.
               São <strong>{CATEGORIES.length} categorias</strong> — é só digitar o nome da pessoa.
